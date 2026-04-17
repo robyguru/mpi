@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pelatihan Konten Digital: Pembuatan Media Pembelajaran Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================================
+           KUNCIAN LAYAR 16:9 MUTLAK (ANTI-SCROLL TOTAL)
+           ========================================================= */
+        body, html {
+            background-color: #0f172a; 
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            overflow: hidden; 
+            font-family: 'Inter', sans-serif;
+            position: relative;
+        }
+
+        #lab-container {
+            width: 1280px; height: 720px;
+            background-color: #f8fafc;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+            overflow: hidden; 
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+            display: flex; flex-direction: column;
+        }
+
+        h1, h2, h3, h4, h5, h6, .font-outfit { font-family: 'Outfit', sans-serif; }
+        
+        .page-enter { animation: pageEnter 0.4s ease-out forwards; }
+        @keyframes pageEnter { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-enter { animation: slideEnter 0.4s ease-out forwards; }
+        @keyframes slideEnter { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .floating-lab { animation: floatUpDown 8s ease-in-out infinite alternate; opacity: 0.15; z-index: -1; position: absolute; font-size: 7rem; filter: grayscale(0.5); }
+        .floating-lab:nth-child(even) { animation-duration: 11s; animation-direction: alternate-reverse; }
+        @keyframes floatUpDown { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(3deg); } 100% { transform: translateY(10px) rotate(-3deg); } }
+
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05); }
+        .nav-active { color: #4f46e5 !important; background-color: #e0e7ff !important; font-weight: 600; }
+        
+        .modul-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; max-width: 1050px; margin: 0 auto; padding-top: 80px; padding-bottom: 10px; }
+        .modul-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-shrink: 0; }
+        .modul-slider-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-h: 0; }
+        .modul-slide-inner { flex: 1; position: relative; padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; min-h: 0; overflow: hidden; }
+        
+        /* ISI SLIDE FLEKSIBEL (ANTI-POTONG) */
+        .slide-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; width: 100%; min-h: 0; overflow: hidden; }
+        .slide-content > div { width: 100%; } 
+        
+        .sub-slide img { pointer-events: none; user-select: none; }
+    </style>
+    <script>
+        window.handleImageError = function(element, num) {
+            element.outerHTML = `<div class="flex flex-col items-center justify-center h-full w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-center"><span class="text-2xl opacity-50 mb-1">🖼️</span><h4 class="text-white font-bold text-xs text-emerald-400">Gambar ${num}.jpg Hilang</h4><p class="text-slate-400 text-[10px]">Pastikan file ${num}.jpg ada di folder asset.</p></div>`;
+        };
+    </script>
+</head>
+<body>
+
+    <div id="lab-container">
+        
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 blob"></div>
+            <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-cyan-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 blob" style="animation-delay: 2s;"></div>
+            <div class="absolute bottom-[-10%] left-[20%] w-[30rem] h-[30rem] bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 blob" style="animation-delay: 4s;"></div>
+            <div class="floating-lab top-[10%] left-[5%] text-indigo-400">🚀</div>
+            <div class="floating-lab top-[40%] right-[8%] text-emerald-400">💡</div>
+            <div class="floating-lab bottom-[15%] left-[10%] text-amber-400">💻</div>
+        </div>
+
+        <div class="absolute w-full top-5 z-50 flex justify-center px-4 pointer-events-none shrink-0">
+            <nav class="w-full max-w-5xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-lg rounded-full px-5 py-2 flex justify-between items-center pointer-events-auto">
+                <button onclick="navigateTo('home')" class="flex items-center gap-3 hover:scale-105 transition-transform shrink-0 focus:outline-none">
+                    <div class="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-full flex items-center justify-center shadow-sm relative"><span class="text-white text-sm">💡</span></div>
+                    <span class="font-bold text-lg text-slate-800 font-outfit tracking-tight">Portal<span class="text-indigo-600">MPI</span></span>
+                </button>
+                <div class="flex space-x-1">
+                    <button onclick="navigateTo('modul1')" id="nav-modul1" class="px-3 py-1.5 text-[13px] font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all nav-btn focus:outline-none">Modul 1</button>
+                    <button onclick="navigateTo('modul2')" id="nav-modul2" class="px-3 py-1.5 text-[13px] font-bold text-slate-600 hover:text-cyan-600 hover:bg-cyan-50 rounded-full transition-all nav-btn focus:outline-none">Modul 2</button>
+                    <button onclick="navigateTo('modul3')" id="nav-modul3" class="px-3 py-1.5 text-[13px] font-bold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all nav-btn focus:outline-none">Modul 3</button>
+                    <button onclick="navigateTo('modul4')" id="nav-modul4" class="px-3 py-1.5 text-[13px] font-bold text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-full transition-all nav-btn focus:outline-none">Modul 4</button>
+                    <button onclick="navigateTo('modul5')" id="nav-modul5" class="px-3 py-1.5 text-[13px] font-bold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all nav-btn focus:outline-none">Modul 5</button>
+                    <button onclick="navigateTo('modul6')" id="nav-modul6" class="px-3 py-1.5 text-[13px] font-bold text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-full transition-all nav-btn focus:outline-none">Modul 6</button>
+                </div>
+            </nav>
+        </div>
+
+        <div id="page-home" class="page-view absolute inset-0 z-10 flex flex-col justify-center items-center w-full h-full page-enter px-8">
+            <header class="text-center mb-6 mt-8">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/90 border border-indigo-100 shadow-sm text-xs font-bold text-indigo-700 mb-3 tracking-wide uppercase">💡 Pelatihan Konten Digital Terpadu</div>
+                <h1 class="text-5xl font-extrabold text-slate-900 tracking-tight mb-3 leading-tight">Pembuatan <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-cyan-600 to-emerald-600">MPI</span></h1>
+                <p class="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">Mengintegrasikan kecerdasan buatan (AI) untuk meracik media pembelajaran interaktif yang modern, menarik, dan sekelas dengan perangkat lunak profesional.</p>
+            </header>
+            <div class="flex flex-col gap-4 w-full max-w-4xl mx-auto">
+                <div class="grid grid-cols-3 gap-4">
+                    <button onclick="navigateTo('modul1')" class="group text-left glass-card p-4 rounded-2xl hover:-translate-y-1 transition-all border-t-4 border-t-indigo-500 overflow-hidden relative focus:outline-none">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-2 text-lg font-bold font-outfit relative z-10">1</div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1 relative z-10">Konsep MPI</h3>
+                        <p class="text-xs text-slate-600 relative z-10">Definisi dasar & komponen wajib media.</p>
+                    </button>
+                    <button onclick="navigateTo('modul2')" class="group text-left glass-card p-4 rounded-2xl hover:-translate-y-1 transition-all border-t-4 border-t-cyan-500 overflow-hidden relative focus:outline-none">
+                        <div class="w-10 h-10 bg-cyan-100 text-cyan-600 rounded-lg flex items-center justify-center mb-2 text-lg font-bold font-outfit relative z-10">2</div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1 relative z-10">Media AI Generatif</h3>
+                        <p class="text-xs text-slate-600 relative z-10">Penggunaan AI Generatif Teks & Visual.</p>
+                    </button>
+                    <button onclick="navigateTo('modul3')" class="group text-left glass-card p-4 rounded-2xl hover:-translate-y-1 transition-all border-t-4 border-t-emerald-500 overflow-hidden relative focus:outline-none">
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-2 text-lg font-bold font-outfit relative z-10">3</div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1 relative z-10">Coding via AI</h3>
+                        <p class="text-xs text-slate-600 relative z-10">Membuat kode HTML5 & Javascript interaktif.</p>
+                    </button>
+                </div>
+                <div class="grid grid-cols-3 gap-4 w-full mx-auto">
+                    <button onclick="navigateTo('modul4')" class="group text-left glass-card p-4 rounded-2xl hover:-translate-y-1 transition-all border-t-4 border-t-amber-500 overflow-hidden relative focus:outline-none">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-2 text-lg font-bold font-outfit relative z-10">4</div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1 relative z-10">Editor & Optimasi</h3>
+                        <p class="text-xs text-slate-600 relative z-10">Pengenalan Code Editor & skenario mode Offline.</p>
+                    </button>
+                    <button onclick="navigateTo('modul5')" class="group text-left glass-card p-4 rounded-2xl hover:-translate-y-1 transition-all border-t-4 border-t-rose-500 overflow-hidden relative focus:outline-none">
+                        <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mb-2 text-lg font-bold font-outfit relative z-10">5</div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1 relative z-10">Publikasi Final</h3>
+                        <p class="text-xs text-slate-600 relative z-10">Hosting web gratis & penyusunan buku panduan.</p>
+                    </button>
+                    <button onclick="navigateTo('modul6')" class="group text-left glass-card p-4 rounded-2xl hover:-translate-y-1 transition-all border-t-4 border-t-violet-500 overflow-hidden relative focus:outline-none">
+                        <div class="w-10 h-10 bg-violet-100 text-violet-600 rounded-lg flex items-center justify-center mb-2 text-lg font-bold font-outfit relative z-10">6</div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1 relative z-10">Konten Ruang Murid</h3>
+                        <p class="text-xs text-slate-600 relative z-10">Ketentuan & standar media edukasi resmi.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-modul1" class="page-view hidden modul-wrapper px-8">
+            <div class="modul-header">
+                <button onclick="navigateTo('home')" class="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-sm focus:outline-none hover:bg-white transition-colors">← Kembali ke Beranda</button>
+                <div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded bg-indigo-100 text-indigo-700 font-bold text-[10px] uppercase tracking-widest">💡 Modul 1</span><h2 class="text-xl font-bold text-slate-900 font-outfit">Eksplorasi MPI</h2></div>
+            </div>
+            <div class="glass-card rounded-2xl modul-slider-card" id="slider-1">
+                <div class="modul-slide-inner">
+                    <div class="slide-content slide-enter block main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">1</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Apa itu Media Pembelajaran Interaktif (MPI)?</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-3xl mx-auto leading-relaxed">Sistem penyampaian materi yang memadukan berbagai elemen multimedia dengan <strong>kontrol penuh dari pengguna</strong>. Siswa tidak lagi menjadi penonton pasif, melainkan penggerak utama dalam mengeksplorasi informasi.</p>
+                            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+                                <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-1.5"><div class="text-xl">🧠</div><strong class="text-sm text-indigo-900">Belajar Aktif (*Active Learning*)</strong></div>
+                                    <p class="text-xs text-slate-700">Meningkatkan retensi memori secara drastis karena siswa memproses informasi melalui tindakan fisik (mengklik, menggeser) dan kognitif secara bersamaan.</p>
+                                </div>
+                                <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                                    <div class="flex items-center gap-2 mb-1.5"><div class="text-xl">⚙️</div><strong class="text-sm text-indigo-900">Pembelajaran Mandiri</strong></div>
+                                    <p class="text-xs text-slate-700">Memungkinkan siswa mengatur ritme belajar mereka sendiri, mengevaluasi kesalahan secara langsung, dan mengeksplorasi konsep dengan aman.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">2</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">4 Komponen Wajib MPI</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-3xl mx-auto">Sebuah media baru dapat diklasifikasikan sebagai "interaktif" jika memiliki empat pilar utama yang menjembatani komunikasi dua arah antara sistem dan siswa.</p>
+                            <div class="grid grid-cols-2 gap-3 max-w-3xl mx-auto text-left">
+                                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-3">
+                                    <div class="text-2xl">📺</div>
+                                    <div><strong class="text-sm text-slate-800 block">Multimedia Konten</strong><p class="text-xs text-slate-500 leading-tight">Perpaduan terstruktur antara teks, grafis visual, animasi, dan audio yang menyajikan inti materi pelajaran.</p></div>
+                                </div>
+                                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-3">
+                                    <div class="text-2xl">🕹️</div>
+                                    <div><strong class="text-sm text-slate-800 block">Sistem Navigasi</strong><p class="text-xs text-slate-500 leading-tight">Kehadiran tombol (Next/Prev), menu, atau *sidebar* yang memberi kebebasan navigasi tanpa paksaan linear.</p></div>
+                                </div>
+                                <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-start gap-3">
+                                    <div class="text-2xl">🖱️</div>
+                                    <div><strong class="text-sm text-slate-800 block">Titik Interaksi (*User Input*)</strong><p class="text-xs text-slate-500 leading-tight">Area penugasan tempat siswa bisa mengetik jawaban, melakukan *drag-and-drop*, atau menggeser variabel (slider).</p></div>
+                                </div>
+                                <div class="bg-indigo-50 p-3.5 rounded-xl border border-indigo-200 shadow-sm flex items-start gap-3">
+                                    <div class="text-2xl">🔄</div>
+                                    <div><strong class="text-sm text-indigo-900 block">Umpan Balik (*Feedback*)</strong><p class="text-xs text-indigo-700 leading-tight">Respon instan dari sistem atas input siswa (contoh: munculnya skor evaluasi, peringatan salah, atau efek visual).</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">3</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Tingkatan Interaktivitas Pembelajaran</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-3xl mx-auto">Tidak semua interaksi memiliki bobot kognitif yang sama. Sesuaikan level kerumitan media dengan tujuan pembelajaran (HOTS/LOTS).</p>
+                            <div class="grid grid-cols-3 gap-4 max-w-4xl mx-auto text-left">
+                                <div class="bg-slate-50 p-4 rounded-xl border shadow-sm">
+                                    <strong class="text-sm text-slate-800 block mb-1">1. Pasif (Reaktif Ringan)</strong>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-2">Interaksi sebatas membalik halaman atau memulai video pembelajaran. Sangat linear.</p>
+                                    <span class="inline-block bg-slate-200 text-slate-700 text-[9px] px-2 py-0.5 rounded-full font-bold">Contoh: Modul PDF / PPT</span>
+                                </div>
+                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                                    <strong class="text-sm text-indigo-800 block mb-1">2. Terpandu (Respon Evaluatif)</strong>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-2">Siswa diberi pilihan jawaban, teka-teki, atau sistem pencocokan dengan *feedback* benar/salah secara instan.</p>
+                                    <span class="inline-block bg-indigo-200 text-indigo-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Contoh: Quizizz / Wordwall</span>
+                                </div>
+                                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute right-0 top-0 w-2 h-full bg-emerald-500"></div>
+                                    <strong class="text-sm text-emerald-800 block mb-1">3. Proaktif (Eksploratif)</strong>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-2">Siswa memegang kendali variabel. (Mengecilkan luas penampang pipa Bernoulli untuk melihat efek pada kecepatan fluida).</p>
+                                    <span class="inline-block bg-emerald-200 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Contoh: Simulasi Interaktif</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">4</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Platform Referensi Global & Nasional</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-3xl mx-auto">Sebelum membuat karya web HTML mandiri, analisis pengalaman pengguna (UX) dari raksasa penyedia media edukasi interaktif berikut:</p>
+                            <div class="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
+                                <button onclick="openIframeModal('https://phet.colorado.edu/sims/html/energy-skate-park-basics/latest/energy-skate-park-basics_in.html')" class="text-left bg-white p-4 rounded-xl border shadow-sm hover:-translate-y-1 focus:outline-none transition-transform">
+                                    <h4 class="font-bold text-indigo-600 text-sm mb-1">PhET Colorado</h4>
+                                    <p class="text-[11px] text-slate-600 mb-2">Standar emas simulasi interaktif sains & matematika dari Universitas Colorado.</p>
+                                    <span class="inline-block bg-indigo-50 text-indigo-600 text-[9px] px-2 py-0.5 rounded-full font-bold">Terbaik untuk Simulasi Fisika</span>
+                                </button>
+                                <button onclick="openIframeModal('https://wordwall.net/')" class="text-left bg-white p-4 rounded-xl border shadow-sm hover:-translate-y-1 focus:outline-none transition-transform">
+                                    <h4 class="font-bold text-blue-500 text-sm mb-1">Wordwall</h4>
+                                    <p class="text-[11px] text-slate-600 mb-2">Platform pembuat *template* permainan edukatif interaktif berbasis *web*.</p>
+                                    <span class="inline-block bg-blue-50 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-bold">Gamifikasi / Kuis Cepat</span>
+                                </button>
+                                <button onclick="openIframeModal('https://murid.kemendikdasmen.go.id/sumber-belajar/materi/lab-maya/simulasi-gerak-relativistik-c867c44a-5386-4890-a0f0-c92641f458c7?id_sub_unit=1428785c-8800-4335-a685-6173aa348032')" class="text-left bg-white p-4 rounded-xl border shadow-sm hover:-translate-y-1 focus:outline-none transition-transform">
+                                    <h4 class="font-bold text-cyan-600 text-sm mb-1">Portal PMM Kemdikbud</h4>
+                                    <p class="text-[11px] text-slate-600 mb-2">Platform resmi penyedia berbagai jenis media interaktif sesuai Kurikulum Merdeka.</p>
+                                    <span class="inline-block bg-cyan-50 text-cyan-700 text-[9px] px-2 py-0.5 rounded-full font-bold">Lokal & Sesuai Kurikulum</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-2.5 border-t border-slate-200 bg-white/60 flex justify-between items-center shrink-0">
+                    <button onclick="prevSlide('slider-1')" class="px-5 py-1.5 text-xs font-bold text-indigo-700 bg-white rounded-full border border-indigo-100 shadow-sm hover:bg-indigo-50 transition focus:outline-none">Sebelumnya</button>
+                    <div class="flex space-x-1.5" id="dots-slider-1"></div>
+                    <button onclick="nextSlide('slider-1')" class="px-5 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full shadow-sm hover:bg-indigo-500 transition focus:outline-none">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-modul2" class="page-view hidden modul-wrapper px-8">
+            <div class="modul-header">
+                <button onclick="navigateTo('home')" class="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-sm focus:outline-none hover:bg-white transition-colors">← Kembali ke Beranda</button>
+                <div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded bg-cyan-100 text-cyan-800 font-bold text-[10px] uppercase tracking-widest">🧠 Modul 2</span><h2 class="text-xl font-bold font-outfit text-slate-900">Media AI untuk MPI</h2></div>
+            </div>
+            <div class="glass-card rounded-2xl modul-slider-card" id="slider-2">
+                <div class="modul-slide-inner">
+                    <div class="slide-content slide-enter block main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">1</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">AI: Asisten MPI Multiguna</h3>
+                            <p class="text-slate-600 mb-5 text-sm max-w-2xl mx-auto">AI Generatif (Gen-AI) memangkas waktu kerja guru dari berminggu-minggu menjadi hitungan jam. Kita membaginya menjadi 3 asisten khusus:</p>
+                            <div class="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
+                                <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-cyan-100 text-center"><div class="text-4xl mb-2 drop-shadow-md">💻</div><strong class="text-sm text-slate-800 block">AI Kode (Logika)</strong><span class="text-[10px] text-slate-500">Claude, ChatGPT, Gemini</span></div>
+                                <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-cyan-100 text-center"><div class="text-4xl mb-2 drop-shadow-md">🎨</div><strong class="text-sm text-slate-800 block">AI Visual (Aset)</strong><span class="text-[10px] text-slate-500">Canva, Bing Image Creator</span></div>
+                                <div class="bg-white/80 p-5 rounded-2xl shadow-sm border border-cyan-100 text-center"><div class="text-4xl mb-2 drop-shadow-md">🔊</div><strong class="text-sm text-slate-800 block">AI Audio (Suara)</strong><span class="text-[10px] text-slate-500">ElevenLabs, Murf.ai</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">2</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Memilih AI Programmer yang Tepat</h3>
+                            <p class="text-slate-600 mb-5 text-sm max-w-3xl mx-auto">Setiap AI memiliki spesialisasi dan "kecerdasan" unik dalam memahami bahasa pemrograman.</p>
+                            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+                                <a href="https://claude.ai/" target="_blank" class="bg-white p-4 rounded-xl shadow-sm border hover:-translate-y-1 transition-transform focus:outline-none"><strong class="text-sm text-slate-800 block mb-1">🧠 Claude (Anthropic)</strong><p class="text-xs text-slate-500 leading-relaxed">Rekomendasi Utama! Paling jenius dalam menyusun logika spasial (penempatan elemen di layar) berbasis HTML5 Canvas.</p></a>
+                                <a href="https://chatgpt.com/" target="_blank" class="bg-white p-4 rounded-xl shadow-sm border hover:-translate-y-1 transition-transform focus:outline-none"><strong class="text-sm text-slate-800 block mb-1">💬 ChatGPT (OpenAI)</strong><p class="text-xs text-slate-500 leading-relaxed">Sangat cerdas dalam memecahkan persamaan rumus fisika kompleks, namun UI web-nya terkadang lebih kaku.</p></a>
+                                <a href="https://gemini.google.com/" target="_blank" class="bg-white p-4 rounded-xl shadow-sm border hover:-translate-y-1 transition-transform focus:outline-none"><strong class="text-sm text-slate-800 block mb-1">✨ Google Gemini</strong><p class="text-xs text-slate-500 leading-relaxed">Sangat cepat dan terintegrasi mulus jika Anda sering menggunakan ekosistem Google Workspace.</p></a>
+                                <a href="https://www.canva.com/" target="_blank" class="bg-white p-4 rounded-xl shadow-sm border hover:-translate-y-1 transition-transform focus:outline-none"><strong class="text-sm text-slate-800 block mb-1">🎨 Canva (Magic Media)</strong><p class="text-xs text-slate-500 leading-relaxed">Bisa digunakan merancang desain MPI yang nanti *App Code*-nya disematkan (Embed).</p></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">3</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">AI Visual (Pembuat Aset Gambar)</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-2xl mx-auto leading-relaxed">Anda tidak perlu jago menggambar. Gunakan AI Gambar untuk membuat aset animasi, instrumen, atau elemen media lain agar aplikasi Anda tidak terlihat membosankan.</p>
+                            <div class="bg-cyan-50 p-5 rounded-2xl border border-cyan-200 max-w-xl mx-auto text-left shadow-inner">
+                                <span class="inline-block bg-cyan-200 text-cyan-800 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider mb-2">Rahasia Prompt Visual</span>
+                                <strong class="block mb-1 text-cyan-900 text-sm">Gunakan struktur *Style + Objek + Latar*:</strong> 
+                                <p class="italic text-slate-700 text-sm bg-white p-3 rounded-lg border border-cyan-100 mt-2">"Ilustrasi vektor 2D tabung erlenmeyer berisi cairan hijau, bergaya desain antarmuka modern (flat design), latar belakang warna putih bersih."</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">4</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">AI Audio (Pengisi Suara Profesional)</h3>
+                            <p class="text-slate-600 text-sm max-w-2xl mx-auto leading-relaxed mb-4">Gunakan teknologi *Text-to-Speech* seperti <strong>ElevenLabs</strong> atau <strong>Murf.ai</strong> untuk merekam narasi pembuka.</p>
+                            <div class="bg-white p-5 rounded-2xl border border-slate-200 max-w-xl mx-auto text-left shadow-sm">
+                                <strong class="block mb-1 text-slate-800 text-sm">Mengapa Butuh Suara?</strong> 
+                                <p class="text-slate-600 text-xs leading-relaxed">Kehadiran suara narator yang natural dan berintonasi (menyerupai guru sungguhan) terbukti meningkatkan daya fokus siswa hingga 40% dibandingkan modul yang sunyi senyap.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-2.5 border-t border-slate-200 bg-white/60 flex justify-between items-center shrink-0">
+                    <button onclick="prevSlide('slider-2')" class="px-5 py-1.5 text-xs font-bold text-cyan-700 bg-white rounded-full border border-cyan-100 shadow-sm hover:bg-cyan-50 transition focus:outline-none">Sebelumnya</button>
+                    <div class="flex space-x-1.5" id="dots-slider-2"></div>
+                    <button onclick="nextSlide('slider-2')" class="px-5 py-1.5 text-xs font-bold text-white bg-cyan-500 rounded-full shadow-sm hover:bg-cyan-600 transition focus:outline-none">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-modul3" class="page-view hidden modul-wrapper px-8">
+            <div class="modul-header">
+                <button onclick="navigateTo('home')" class="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-sm focus:outline-none hover:bg-white transition-colors">← Kembali ke Beranda</button>
+                <div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px] uppercase tracking-widest">💻 Modul 3</span> <h2 class="text-xl font-bold font-outfit text-slate-900">Coding via AI (HTML/JS)</h2></div>
+            </div>
+            
+            <div class="glass-card rounded-2xl modul-slider-card" id="slider-3">
+                <div class="modul-slide-inner">
+                    <div class="slide-content slide-enter block main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">1</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Seni Meracik Kode Tanpa Mengetik</h3>
+                            <p class="text-slate-600 mb-5 text-sm max-w-3xl mx-auto leading-relaxed">Fokuslah pada Alur Logika dan Rumus Fisika. Biarkan AI yang lelah menyusun sintaks bahasanya. Berikut 3 pilar penopang MPI HTML5:</p>
+                            <div class="grid grid-cols-3 gap-4 max-w-4xl mx-auto text-left">
+                                <div class="bg-white/80 p-4 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-400"></div>
+                                    <div class="text-2xl mb-1">🧱</div><strong class="block mb-0.5 text-sm text-slate-800">HTML5</strong><span class="text-[10px] text-slate-500 font-bold uppercase mb-1.5 block tracking-wider">Kerangka Bangunan</span><p class="text-[11px] text-slate-600 leading-relaxed">Menyediakan tulang punggung aplikasi (Canvas, Slider *Input Range*, Label Teks, dan Tombol).</p>
+                                </div>
+                                <div class="bg-white/80 p-4 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400"></div>
+                                    <div class="text-2xl mb-1">🎨</div><strong class="block mb-0.5 text-sm text-slate-800">Tailwind CSS</strong><span class="text-[10px] text-cyan-600 font-bold uppercase mb-1.5 block tracking-wider">Desain Antarmuka</span><p class="text-[11px] text-slate-600 leading-relaxed">Merias web secara instan. Mengubah tombol kaku menjadi *rounded* dan mengatur tata letak grid layar.</p>
+                                </div>
+                                <div class="bg-white/80 p-4 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-yellow-400"></div>
+                                    <div class="text-2xl mb-1">⚡</div><strong class="block mb-0.5 text-sm text-slate-800">JavaScript</strong><span class="text-[10px] text-yellow-600 font-bold uppercase mb-1.5 block tracking-wider">Mesin Fisika Cerdas</span><p class="text-[11px] text-slate-600 leading-relaxed">Otak simulasi. Membaca interaksi *mouse/touch* dan menjalankan kalkulasi rumus fisika secara *real-time*.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-content hidden main-slide h-full" style="justify-content: flex-start;">
+                        <div class="flex justify-between items-center w-full mb-1.5 px-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 bg-gradient-to-br from-emerald-400 to-teal-500 rounded flex items-center justify-center text-white font-bold text-xs shadow-md">2</div>
+                                <h3 class="text-base font-bold text-slate-800">Panduan UI/UX (Desain Layar)</h3>
+                            </div>
+                            <button onclick="openGalleryFullscreen()" class="flex items-center gap-1.5 bg-slate-800 text-white px-2.5 py-1 rounded text-[10px] font-bold hover:bg-slate-700 transition focus:outline-none shadow-sm"><span>⛶</span> Layar Penuh</button>
+                        </div>
+                        <div class="relative w-full bg-slate-900 rounded-xl overflow-hidden flex flex-col flex-grow min-h-[200px] border border-slate-700 shadow-xl">
+                            <div class="flex-grow relative w-full flex items-center justify-center p-2 bg-slate-950/80">
+                                <div id="subslide-0" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-100 flex items-center justify-center"><img src="asset/1.jpg" onerror="handleImageError(this, 1)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-1" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/2.jpg" onerror="handleImageError(this, 2)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-2" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/3.jpg" onerror="handleImageError(this, 3)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-3" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/4.jpg" onerror="handleImageError(this, 4)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-4" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/5.jpg" onerror="handleImageError(this, 5)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-5" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/6.jpg" onerror="handleImageError(this, 6)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-6" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/7.jpg" onerror="handleImageError(this, 7)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-7" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/8.jpg" onerror="handleImageError(this, 8)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-8" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/9.jpg" onerror="handleImageError(this, 9)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-9" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/10.jpg" onerror="handleImageError(this, 10)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-10" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/11.jpg" onerror="handleImageError(this, 11)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-11" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/12.jpg" onerror="handleImageError(this, 12)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-12" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/13.jpg" onerror="handleImageError(this, 13)" class="max-w-full max-h-full object-contain rounded"></div>
+                                <div id="subslide-13" class="sub-slide absolute inset-2 transition-opacity duration-300 opacity-0 pointer-events-none flex items-center justify-center"><img src="asset/14.jpg" onerror="handleImageError(this, 14)" class="max-w-full max-h-full object-contain rounded"></div>
+                            </div>
+                            <div class="bg-slate-950 px-4 py-2 flex justify-between items-center shrink-0 border-t border-slate-800">
+                                <button onclick="prevSubSlide()" class="px-3 py-1 bg-slate-800 text-slate-300 rounded text-[10px] font-bold hover:bg-slate-700 hover:text-white transition focus:outline-none">← Mundur</button>
+                                <span id="sub-counter" class="text-[10px] font-mono text-emerald-400 font-bold tracking-widest bg-emerald-900/30 px-2 py-0.5 rounded">1 / 14</span>
+                                <button onclick="nextSubSlide()" class="px-3 py-1 bg-emerald-600 text-white rounded text-[10px] font-bold hover:bg-emerald-500 transition focus:outline-none">Maju →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">3</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Formula Prompting (Metode RTDF)</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-2xl mx-auto">AI butuh instruksi yang terkotak. Jangan merangkai paragraf novel, gunakan kerangka baku RTDF agar kode langsung jalan tanpa error.</p>
+                            <div class="grid grid-cols-2 gap-3 max-w-3xl mx-auto text-left">
+                                <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><strong class="block text-xs text-emerald-700 mb-0.5 font-bold uppercase tracking-wider">Role (Peran)</strong><p class="text-xs text-slate-800 font-medium">"Bertindaklah sebagai Ahli Front-End Developer & Guru Fisika Senior."</p></div>
+                                <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><strong class="block text-xs text-emerald-700 mb-0.5 font-bold uppercase tracking-wider">Task (Tugas)</strong><p class="text-xs text-slate-800 font-medium">"Buat simulasi interaktif tentang Hukum Viskositas Zat Cair."</p></div>
+                                <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><strong class="block text-xs text-emerald-700 mb-0.5 font-bold uppercase tracking-wider">Details (Detail)</strong><p class="text-xs text-slate-800 font-medium">"Gunakan Canvas, sediakan panel *slider* untuk merubah jenis cairan."</p></div>
+                                <div class="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><strong class="block text-xs text-emerald-700 mb-0.5 font-bold uppercase tracking-wider">Format (Format Hasil)</strong><p class="text-xs text-slate-800 font-medium">"Gabungkan semua sintaks (HTML, CSS, JS) di dalam 1 file `index.html` saja."</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">4</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Membedah Anatomi Kode AI</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-2xl mx-auto">Kenali letak 3 komponen utama di dalam file HTML agar Anda percaya diri merubah desain dan *tweak* angka secara mandiri:</p>
+                            <div class="grid grid-cols-3 gap-3 max-w-4xl mx-auto text-left">
+                                <div class="bg-white/90 p-4 rounded-xl border border-slate-200 relative overflow-hidden shadow-sm">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-400"></div>
+                                    <strong class="text-slate-800 text-sm block mb-1">1. &lt;head&gt;</strong>
+                                    <p class="text-[11px] text-slate-600">Area *Library*. Jika desain tampilan berantakan atau polos, pastikan link <code>&lt;script src="tailwindcss"&gt;</code> diletakkan aman di dalam blok ini.</p>
+                                </div>
+                                <div class="bg-white/90 p-4 rounded-xl border border-slate-200 relative overflow-hidden shadow-sm">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-teal-400"></div>
+                                    <strong class="text-slate-800 text-sm block mb-1">2. &lt;body&gt;</strong>
+                                    <p class="text-[11px] text-slate-600">Area Visual. Cari tag <code>&lt;button&gt;</code> untuk menerjemahkan bahasa, atau rubah batas maksimal angka di atribut <code>max="10"</code> pada *slider*.</p>
+                                </div>
+                                <div class="bg-white/90 p-4 rounded-xl border border-slate-200 relative overflow-hidden shadow-sm">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500"></div>
+                                    <strong class="text-slate-800 text-sm block mb-1">3. &lt;script&gt;</strong>
+                                    <p class="text-[11px] text-slate-600">Area Logika. Temukan dan modifikasi variabel konstan (seperti <code>g = 9.8</code> gravitasi bumi menjadi gravitasi bulan) di dalam bagian ini.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">5</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Studi Kasus Uji Coba</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-2xl mx-auto">Mari praktikkan integrasi metode RTDF ke dalam satu instruksi yang solid untuk dikirimkan kepada Claude 4.6 atau ChatGPT.</p>
+                            <div class="bg-slate-900 rounded-2xl p-6 border-l-4 border-emerald-500 max-w-2xl mx-auto shadow-lg text-left">
+                                <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest block mb-2">Prompt Praktik:</span>
+                                <code class="text-slate-200 text-sm leading-relaxed font-mono">"Buat simulasi <strong class="text-emerald-300">Hukum Bernoulli (Pipa Venturi)</strong> di HTML Canvas dengan gaya Tailwind CSS yang modern. Tambahkan panel slider interaktif untuk mengatur <strong class="text-emerald-300">Luas Penampang (A1 dan A2)</strong>. Pastikan animasi fluida terlihat mengalir secara konstan merespon perubahan."</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">6</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Standar Visual: Modul Profesional</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-3xl mx-auto leading-relaxed">Tanpa biaya *lisensi* mahal, HTML & CSS buatan AI mampu meniru keindahan dan tata letak UI/UX sekelas <em>software e-learning</em> profesional seperti <strong>Articulate Storyline</strong>.</p>
+                            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+                                <div class="bg-white/70 p-5 rounded-2xl border border-emerald-100 shadow-sm">
+                                    <strong class="text-emerald-800 text-sm block mb-1.5 flex items-center gap-2"><span class="text-xl">✨</span> Karakteristik Tampilan</strong>
+                                    <ul class="text-xs text-slate-700 list-disc ml-5 space-y-1">
+                                        <li>Navigasi linear terstruktur (*Tombol Next/Prev* jelas).</li>
+                                        <li>Menu *sidebar* responsif untuk melacak indeks progres belajar.</li>
+                                        <li>Fitur Pop-up (*lightbox layer*) berlapis saat menekan objek krusial.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-white/70 p-5 rounded-2xl border border-emerald-100 shadow-sm">
+                                    <strong class="text-emerald-800 text-sm block mb-1.5 flex items-center gap-2"><span class="text-xl">✅</span> Kelebihan Utama</strong>
+                                    <ul class="text-xs text-slate-700 list-disc ml-5 space-y-1">
+                                        <li>Sangat rapi dan intuitif bagi siswa yang terbiasa membaca E-Modul.</li>
+                                        <li>Sangat cocok untuk simulasi praktikum yang menuntut SOP eksperimen berurutan (bertahap).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">7</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Standar Interaksi: Kelas Game Engine</h3>
+                            <p class="text-slate-600 mb-4 text-sm max-w-3xl mx-auto leading-relaxed">Mengoptimalkan kapabilitas <code>HTML5 &lt;canvas&gt;</code>, AI dapat meracik MPI yang seru dan "terasa hidup", seakan-olah dibuat menggunakan <strong>Unity Engine</strong>.</p>
+                            <div class="grid grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+                                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                                    <strong class="text-emerald-400 text-sm block mb-1.5 flex items-center gap-2"><span class="text-xl">🎮</span> Dinamika Interaksi</strong>
+                                    <ul class="text-xs text-slate-300 list-disc ml-5 space-y-1">
+                                        <li>*Rendering* animasi mulus hingga 60 *Frame Per Second* (FPS).</li>
+                                        <li>*Physics Engine* kuat (mampu meniru pantulan bola, gaya gesek, & gravitasi presisi).</li>
+                                        <li>Panel pengatur (UI) bergaya *Heads-Up Display* (HUD) yang melayang transparan di atas kanvas.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                                    <strong class="text-emerald-400 text-sm block mb-1.5 flex items-center gap-2"><span class="text-xl">🚀</span> Nilai Jual Edukatif</strong>
+                                    <ul class="text-xs text-slate-300 list-disc ml-5 space-y-1">
+                                        <li>*Engagement* maksimal: Siswa masuk ke mode bermain, menghilangkan rasa bosan pada pelajaran yang sulit.</li>
+                                        <li>Visualisasi dampak eksperimen terasa lebih instan (*real-time*).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="px-6 py-2.5 border-t border-slate-200 bg-white/60 flex justify-between items-center shrink-0">
+                    <button onclick="prevSlide('slider-3')" class="px-5 py-1.5 text-xs font-bold text-emerald-700 bg-white rounded-full border border-emerald-100 shadow-sm hover:bg-emerald-50 transition focus:outline-none">Sebelumnya</button>
+                    <div class="flex space-x-1.5" id="dots-slider-3"></div>
+                    <button onclick="nextSlide('slider-3')" class="px-5 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-full shadow-sm hover:bg-emerald-500 transition focus:outline-none">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-modul4" class="page-view hidden modul-wrapper px-8">
+            <div class="modul-header">
+                <button onclick="navigateTo('home')" class="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-sm focus:outline-none hover:bg-white transition-colors">← Kembali ke Beranda</button>
+                <div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded bg-amber-100 text-amber-800 font-bold text-[10px] uppercase tracking-widest">🔬 Modul 4</span><h2 class="text-xl font-bold text-slate-900 font-outfit">Aplikasi Editor & Optimasi Layar</h2></div>
+            </div>
+            <div class="glass-card rounded-2xl modul-slider-card" id="slider-4">
+                <div class="modul-slide-inner">
+                    <div class="slide-content slide-enter block main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mb-4 mx-auto shadow-md text-white text-xl font-bold">1</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">PID Friendly & Skalabilitas (Rasio 16:9)</h3>
+                            <p class="text-slate-600 text-sm mb-5 max-w-3xl mx-auto leading-relaxed">Berikan parameter <code>aspect-ratio: 16/9</code> pada kelas pembungkus aplikasi Anda. Hal ini vital agar simulasi tampil mengisi penuh layar Smartboard atau Proyektor di sekolah, bebas dari area *blank* atau pemotongan visual.</p>
+                            
+                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Optimasi Antarmuka Layar Sentuh (*Touch-Friendly*)</h3>
+                            <p class="text-slate-600 text-sm max-w-3xl mx-auto leading-relaxed">Ingat, siswa sering menggunakan tablet atau Smartboard langsung. Gunakan spesifikasi minimal area tekan (tombol/slider) sebesar <strong>44x44 piksel</strong>. Hindari total *trigger* navigasi yang hanya aktif mengandalkan efek *hover* (sentuhan kursor mouse yang tidak ditekan).</p>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mb-4 mx-auto shadow-md text-white text-xl font-bold">2</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Mengenal *Code Editor*</h3>
+                            <p class="text-slate-700 mb-4 text-sm max-w-2xl mx-auto">AI bukan tempat menyimpan file. Anda membutuhkan rumah (Editor) untuk merakit dan menyimpan mentahan kode AI tersebut menjadi file `.html` nyata.</p>
+                            <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 max-w-lg mx-auto text-left shadow-sm">
+                                <span class="font-bold text-amber-900 text-sm block mb-1.5 flex items-center gap-2">💡 Panduan Memilih Alat:</span>
+                                <ul class="list-disc ml-5 text-xs text-amber-800 space-y-1">
+                                    <li><strong>VS Code:</strong> Jika Anda menggunakan laptop *flagship* (Core i5/Ryzen 5 ++).</li>
+                                    <li><strong>Notepad++:</strong> Jika Anda menggunakan laptop sekolah keluaran lama.</li>
+                                    <li><strong>Online Editor:</strong> Pilihan saat di Aula tanpa menginstal apa pun.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-4xl">📝</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">Notepad <span class="text-base text-slate-500 font-normal tracking-wide">(Bawaan OS Windows)</span></h3></div>
+                            <div class="grid grid-cols-2 gap-4 mb-4 max-w-2xl mx-auto text-left">
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200"><strong class="text-green-700 text-sm block mb-1">✅ Kelebihan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Super ringan (0 MB memori).</li><li>Tidak ada prosedur *Install*.</li></ul></div>
+                                <div class="bg-red-50 p-4 rounded-xl border border-red-200"><strong class="text-red-700 text-sm block mb-1">❌ Kekurangan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Visual teks menyiksa mata (hanya teks hitam pekat).</li><li>Sulit menemukan baris yang error (*No line numbers*).</li></ul></div>
+                            </div>
+                            <div class="bg-slate-800 text-white p-4 rounded-xl max-w-xl mx-auto text-left shadow-md"><strong class="text-amber-400 text-xs block mb-0.5 uppercase tracking-wide">Petunjuk Penggunaan Efektif:</strong><p class="text-xs text-slate-300 leading-relaxed">Berfungsi mutlak sebagai *Plan B* saat komputer lab dikunci Admin IT. Ingat: Saat Save As, ubah *Save as type* menjadi <code>All Files (*.*)</code>, lalu berikan eksistensi file manual <code>index.html</code>.</p></div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-4xl">💻</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">Visual Studio Code <span class="text-base text-slate-500 font-normal tracking-wide">(VS Code)</span></h3></div>
+                            <div class="grid grid-cols-2 gap-4 mb-4 max-w-2xl mx-auto text-left">
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200"><strong class="text-green-700 text-sm block mb-1">✅ Kelebihan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li><em>Syntax Highlighting</em> canggih (warna berbeda per elemen).</li><li>Punya auto-koreksi kesalahan ketik.</li></ul></div>
+                                <div class="bg-red-50 p-4 rounded-xl border border-red-200"><strong class="text-red-700 text-sm block mb-1">❌ Kekurangan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Aplikasi rakus memori RAM laptop.</li><li>Antarmuka (UI) menakutkan bagi guru non-IT.</li></ul></div>
+                            </div>
+                            <div class="bg-slate-800 text-white p-4 rounded-xl max-w-xl mx-auto text-left shadow-md"><strong class="text-amber-400 text-xs block mb-0.5 uppercase tracking-wide">Petunjuk Penggunaan Efektif:</strong><p class="text-xs text-slate-300 leading-relaxed">Standard Wajib bagi *Developer* AI. Pasang ekstensi andalan bernama <strong>"Live Server"</strong>. Dengan ini, Anda merubah ukuran tulisan, tekan Save (CTRL+S), dan Chrome Anda di sebelah kiri akan *update* secara magis tanpa perlu *refresh* F5!</p></div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-4xl">🌐</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">Editor Virtual di *Browser*</h3></div>
+                            <p class="text-xs text-slate-500 mb-3">(Contoh: html.onlineviewer.net, CodePen.io, JSFiddle)</p>
+                            <div class="grid grid-cols-2 gap-4 mb-4 max-w-2xl mx-auto text-left">
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200"><strong class="text-green-700 text-sm block mb-1">✅ Kelebihan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Halaman terbelah cantik (Kiri kode HTML, Kanan hasil instan).</li><li>Zero *Install*. Cukup buka link.</li></ul></div>
+                                <div class="bg-red-50 p-4 rounded-xl border border-red-200"><strong class="text-red-700 text-sm block mb-1">❌ Kekurangan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Lumpuh jika Wifi putus.</li><li>Satu kali klik 'Silang' (X) pada tab tanpa sengaja = Karya lenyap selamanya.</li></ul></div>
+                            </div>
+                            <div class="bg-slate-800 text-white p-4 rounded-xl max-w-xl mx-auto text-left shadow-md"><strong class="text-amber-400 text-xs block mb-0.5 uppercase tracking-wide">Petunjuk Penggunaan Efektif:</strong><p class="text-xs text-slate-300 leading-relaxed">Tempat paling cocok untuk "Ruang Eksekusi Sementara" di tengah diklat. Begitu AI kelar menulis, langsung tempel (*Paste*) di sini untuk mendeteksi *bug*. Bila lancar, pindahkan permanen ke File Desktop.</p></div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-4xl">🦎</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">Notepad++ (Npp)</h3></div>
+                            <div class="grid grid-cols-2 gap-4 mb-4 max-w-2xl mx-auto text-left">
+                                <div class="bg-green-50 p-4 rounded-xl border border-green-200"><strong class="text-green-700 text-sm block mb-1">✅ Kelebihan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Spesialis Laptop Kentang (*Installer* mungil 4.5 MB).</li><li>Teks terwarna dan punya sistem angka baris.</li></ul></div>
+                                <div class="bg-red-50 p-4 rounded-xl border border-red-200"><strong class="text-red-700 text-sm block mb-1">❌ Kekurangan</strong><ul class="text-xs text-slate-700 list-disc ml-4 space-y-1"><li>Visual *Toolbar* kembali ke era Windows 7.</li><li>Hilangnya fitur mewah sinkronisasi *Live Preview*.</li></ul></div>
+                            </div>
+                            <div class="bg-slate-800 text-white p-4 rounded-xl max-w-xl mx-auto text-left shadow-md"><strong class="text-amber-400 text-xs block mb-0.5 uppercase tracking-wide">Petunjuk Penggunaan Efektif:</strong><p class="text-xs text-slate-300 leading-relaxed">Kompromi paling cerdas antara keringanan Notepad biasa dan kepintaran identifikasi warna milik VS Code. Sangat diwajibkan untuk mengelola *file* MPI jika laptop guru sering *freeze*.</p></div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mb-4 mx-auto shadow-md text-white text-xl font-bold">7</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Skenario Mode *Offline* (*Zero-Quota*)</h3>
+                            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200 shadow-inner max-w-2xl mx-auto text-left">
+                                <p class="text-slate-800 text-sm mb-3 font-semibold">Trik jitu mendistribusikan karya MPI di sekolah area <em>Blank-Spot</em> (tanpa sinyal WiFi):</p>
+                                <ol class="list-decimal ml-5 space-y-1.5 text-xs text-slate-700">
+                                    <li>Minta AI merangkum ketiga sistem (Struktur HTML, Hiasan CSS, Animasi JS) ke dalam tubuh satu file <code>index.html</code> tunggal (tanpa dipisah-pisah).</li>
+                                    <li>Larang AI menggunakan link "URL Gambar Eksternal". Unduh gambar aset, satukan di sebuah folder lokal baru (contoh nama: <code>asset</code>).</li>
+                                    <li>Salin (*Copy*) *folder induk* Anda langsung ke Media Flashdisk.</li>
+                                    <li>Pasangkan Flashdisk di komputer siswa, dan minta mereka "Klik Dua Kali" (Double-Click) file HTML tersebut. Browser akan merender simulasi secara mutlak lokal!</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-2.5 border-t border-slate-200 bg-white/60 flex justify-between items-center shrink-0">
+                    <button onclick="prevSlide('slider-4')" class="px-5 py-1.5 text-xs font-bold text-amber-700 bg-white rounded-full border border-amber-100 shadow-sm hover:bg-amber-50 transition focus:outline-none">Sebelumnya</button>
+                    <div class="flex space-x-1.5" id="dots-slider-4"></div>
+                    <button onclick="nextSlide('slider-4')" class="px-5 py-1.5 text-xs font-bold text-white bg-amber-500 rounded-full shadow-sm hover:bg-amber-600 transition focus:outline-none">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-modul5" class="page-view hidden modul-wrapper px-8">
+            <div class="modul-header">
+                <button onclick="navigateTo('home')" class="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-sm focus:outline-none hover:bg-white transition-colors">← Kembali ke Beranda</button>
+                <div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded bg-rose-100 text-rose-800 font-bold text-[10px] uppercase tracking-widest">🚀 Modul 5</span><h2 class="text-xl font-bold text-slate-900 font-outfit">Publikasi Final</h2></div>
+            </div>
+            <div class="glass-card rounded-2xl modul-slider-card" id="slider-5">
+                <div class="modul-slide-inner">
+                    <div class="slide-content slide-enter block main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-xl flex items-center justify-center mb-4 mx-auto shadow-md text-white text-xl font-bold">1</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Definisi Hosting Web (Hosting Cloud)</h3>
+                            <p class="text-slate-600 text-sm max-w-2xl mx-auto mb-4 leading-relaxed">Beralih dari mode *Offline*, *Hosting* adalah jembatan penghubung yang menyihir tumpukan file HTML terisolasi di dalam Laptop Anda menjadi sebuah portal situs interaktif berskala internasional (contoh tautan: <em>fisika-roby.netlify.app</em>).</p>
+                            <p class="text-slate-600 text-xs font-bold uppercase tracking-widest border-t border-slate-200 pt-3 max-w-xl mx-auto">4 Pilar *Hosting* Pendidikan Gratis Sepenuhnya Tanpa Kartu Kredit:</p>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-3xl">▲</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">1. Vercel (Tercepat & Paling Instan)</h3></div>
+                            <div class="bg-rose-50 p-5 rounded-2xl border border-rose-200 max-w-2xl mx-auto text-left shadow-sm">
+                                <strong class="text-rose-800 text-sm block mb-2">Instruksi *Deploy* Kilat:</strong>
+                                <ol class="list-decimal ml-5 space-y-1.5 text-slate-700 text-xs font-medium">
+                                    <li>Lakukan registrasi cepat di <strong>vercel.com</strong> menggunakan metode sambung akun Gmail (Google).</li>
+                                    <li>Buka beranda (<em>Dashboard</em> utama). Deteksi letak modul *uploader* bergambar kotak putus-putus (Biasanya ada teks "Drag & Drop").</li>
+                                    <li><strong>Buka File Explorer Laptop Anda.</strong> Temukan folder utama MPI (jangan pisahkan isinya). Klik dan tahan folder tersebut, gerakkan ke *browser*, dan Lepas (Drop) di atas zona putus-putus Vercel.</li>
+                                    <li>Dalam 10 Detik, Server Vercel akan menganalisis kode HTML, mengolah, dan secara spektakuler menyerahkan *Link Domain* biru menyala yang siap dipakai.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-3xl text-teal-500 drop-shadow">⬡</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">2. Netlify (Kompetitor Klasik Vercel)</h3></div>
+                            <div class="bg-teal-50 p-5 rounded-2xl border border-teal-200 max-w-2xl mx-auto text-left shadow-sm">
+                                <strong class="text-teal-800 text-sm block mb-2">Instruksi *Deploy* Serupa:</strong>
+                                <ol class="list-decimal ml-5 space-y-1.5 text-slate-700 text-xs font-medium">
+                                    <li>Meluncurlah ke laman <strong>netlify.com</strong>. Ketuk <em>Sign Up / Login</em>. Pilih otentikasi praktis (Google).</li>
+                                    <li>Lihat pada panel bilah kendali vertikal di sebelah Kiri, dan tekan menu spesifik bernama <strong>"Sites"</strong>.</li>
+                                    <li>Gulir roda mouse ke bagian kaki (*footer*) halaman. Ada sebuah zona abu-abu lebar berisi pesan <em>"Want to deploy a new site? Drag and drop your site output folder here"</em>.</li>
+                                    <li>Lakukan metode <em>Seret & Lepas</em> folder fisik MPI dari *Desktop* PC ke zona tersebut layaknya di Vercel.</li>
+                                    <li>Selesai! Judul acak nan kocak (berwarna Hijau) akan tercipta. Klik judul itu untuk melihat Live Preview.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-3xl drop-shadow">🐙</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">3. GitHub Pages (Standar *Programmer*)</h3></div>
+                            <div class="bg-slate-100 p-5 rounded-2xl border border-slate-300 max-w-2xl mx-auto text-left shadow-sm">
+                                <strong class="text-slate-800 text-sm block mb-2">Instruksi *Hosting* Jangka Panjang (Tidak akan kedaluwarsa):</strong>
+                                <ol class="list-decimal ml-5 space-y-1 text-slate-700 text-[11px] font-medium leading-relaxed">
+                                    <li>Tuju <strong>github.com</strong>. Pencet tombol hijau dominan bernama <strong>"New"</strong> untuk melahirkan ruang simpan (*Repository*) kosong.</li>
+                                    <li><strong>AWAS:</strong> Masukkan nama repositori secara mutlak mengikuti susunan ini: <code>nama-depan-anda.github.io</code> lalu tekan konfirmasi <em>Create Repository</em>.</li>
+                                    <li>Ketuk hiperpautan biru kecil bertuliskan <em>"uploading an existing file"</em>. Sekarang, alih-alih melempar foldernya, seretlah **isi** di dalamnya (file <code>index.html</code> beserta direktori <code>asset</code>) ke sana. Tekan konfirmasi <strong>Commit Changes</strong>.</li>
+                                    <li>Masuk ke *Gear Icon* (<strong>Settings</strong>) di sudut kanan atas > Sorot sub-menu <strong>Pages</strong> (di bilah kiri bawah).</li>
+                                    <li>Perhatikan bab *Build and deployment*. Di menu lungsur (*Dropdown*) yang tertulis `none`, paksa berubah menjadi <code>main</code> lalu tekan *Save*.</li>
+                                    <li>Dalam 3 Menit, situs MPI Anda resmi mengudara menantang dunia pada *link* <code>https://nama-depan-anda.github.io</code>.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="flex items-center justify-center gap-3 mb-3"><span class="text-3xl text-blue-500 drop-shadow">📄</span><h3 class="text-2xl font-bold text-slate-800 font-outfit">4. Google Sites (Favorit Para Pendidik)</h3></div>
+                            <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 max-w-2xl mx-auto text-left shadow-sm">
+                                <strong class="text-blue-800 text-sm block mb-1.5">Trik Integrasi Kanvas Simultan:</strong>
+                                <ol class="list-decimal ml-5 space-y-1 text-xs text-slate-700 font-medium mb-3">
+                                    <li>Kunjungi <strong>sites.google.com</strong>, buka bingkai situs *Blank* (Kosong).</li>
+                                    <li>Temukan *Panel Element* (Kanan), klik logo <strong>Sematkan (< > Embed)</strong>.</li>
+                                    <li>Lompati tab URL, dan pilih tab sebelahnya yang berbunyi <strong>Sematkan Kode (Embed Code)</strong>, muntahkan (*Paste*) tumpukan baris teks HTML MPI Anda.</li>
+                                </ol>
+                                <div class="bg-white p-3 rounded-xl border border-rose-200 text-[10px] text-slate-600 leading-relaxed shadow-inner">
+                                    <strong>⚠️ SINDROM GOOGLE SITES PENTING:</strong> Sistem *Cloud Storage* Sites <strong>buta</strong> terhadap struktur folder <code>asset/</code> lokal milik komputer Anda. Semua elemen visual (*Image/Icon*) di dalam tubuh koding HTML harus dikonversi mandiri menjadi <strong>Tautan URL Internet</strong> (Caranya: *Upload* manual gambar-gambar tersebut ke Imgur/Blogger/Drive Publik, lalu copy tautan raw-nya ke koding). 
+                                    <br><br>👉 <strong>REKOMENDASI TERGAMPANG:</strong> Lempar web tersebut ke Vercel (Lihat metode 1), copy *Link Live* Vercel-nya, dan cukup <em>Sematkan (Embed) sebagai URL</em> di Sites. Sangat elegan dan dijamin nihil *Error Gambar*.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">6</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Produksi Buku Manual (SOP Standar Keamanan Modul)</h3>
+                            <p class="text-slate-600 text-sm max-w-2xl mx-auto leading-relaxed">LKPD Fisik jangan hanya penuh dengan tulisan panjang. Anak generasi *Z-Alpha* butuh komando visual. Buatlah infografis panduan UI dari tangkapan layar (*Screenshot*) MPI Anda sendiri.</p>
+                            <p class="text-slate-600 text-sm max-w-2xl mx-auto leading-relaxed mt-3">Suntikkan ornamen <strong>Panah Merah Menohok</strong> atau Lingkaran tebal pada dokumen *Print-Out* tersebut. Beri *Caption* telak: <em>"Tarik kenop bundar biru ini perlahan ke kanan untuk memanaskan cairan"</em>, atau <em>"Fokuskan mata pada sel *Speedometer* merah ini sesaat setelah peluru lepas!"</em></p>
+                        </div>
+                    </div>
+                    <div class="slide-content hidden main-slide">
+                        <div>
+                            <div class="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-500 rounded-xl flex items-center justify-center mb-3 mx-auto shadow-md text-white text-xl font-bold">7</div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Fase *Quality Control* (Simulasi Kekebalan *Bug*)</h3>
+                            <p class="text-slate-600 text-sm max-w-2xl mx-auto leading-relaxed mb-3">Sebagai Penulis Utama perangkat MPI, wibawa guru adalah kelancaran aplikasi. Eksekusi <em>Stress-Test Brutal</em> sebelum URL menyebar di Whatsapp Grup Ketua Kelas!</p>
+                            <ul class="list-disc ml-5 mt-1 text-xs text-slate-600 space-y-1.5 max-w-xl mx-auto text-left font-medium">
+                                <li>Geser panel *Slider Parameter* secara beringas (Maju Mundur secepat mungkin). Amati: Apakah kanvas *Crash*? Atau fisika masih mulus mengikuti angka?</li>
+                                <li>Tekan dan tabrak-tabrakan tombol berlawanan (*Play & Reset*) secara sporadis.</li>
+                                <li>Siksa *Layout Responsive* dengan melebarkan layar Laptop semaksimal mungkin, dan perketat dengan HP sistem potret (*Portrait* tegak). Web 16:9 yang hebat, akan mampu menyusut mengecil menuruti cangkang kaca HP tanpa ada objek yang meleset!</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="px-6 py-2.5 border-t border-slate-200 bg-white/60 flex justify-between items-center shrink-0">
+                    <button onclick="prevSlide('slider-5')" class="px-5 py-1.5 text-xs font-bold text-rose-700 bg-white rounded-full border border-rose-100 shadow-sm hover:bg-rose-50 transition focus:outline-none">Sebelumnya</button>
+                    <div class="flex space-x-1.5" id="dots-slider-5"></div>
+                    <button onclick="nextSlide('slider-5')" class="px-5 py-1.5 text-xs font-bold text-white bg-rose-500 rounded-full shadow-sm hover:bg-rose-600 transition focus:outline-none">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-modul6" class="page-view hidden modul-wrapper px-8">
+            <div class="modul-header">
+                <button onclick="navigateTo('home')" class="bg-white/80 px-4 py-1.5 rounded-full border border-slate-200 text-xs font-bold shadow-sm focus:outline-none hover:bg-white transition-colors">← Kembali ke Beranda</button>
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded bg-violet-100 text-violet-800 font-bold text-[10px] uppercase tracking-widest">📚 Modul 6</span>
+                    <h2 class="text-xl font-bold text-slate-900 font-outfit">Jenis Konten di Ruang Murid</h2>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl modul-slider-card" id="slider-6">
+                <div class="modul-slide-inner !p-3">
+                    
+                    <div class="slide-content slide-enter h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/15.jpg" onerror="handleImageError(this, 15)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/16.jpg" onerror="handleImageError(this, 16)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/17.jpg" onerror="handleImageError(this, 17)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/18.jpg" onerror="handleImageError(this, 18)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/19.jpg" onerror="handleImageError(this, 19)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/20.jpg" onerror="handleImageError(this, 20)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/21.jpg" onerror="handleImageError(this, 21)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/22.jpg" onerror="handleImageError(this, 22)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/23.jpg" onerror="handleImageError(this, 23)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/24.jpg" onerror="handleImageError(this, 24)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/25.jpg" onerror="handleImageError(this, 25)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/26.jpg" onerror="handleImageError(this, 26)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/27.jpg" onerror="handleImageError(this, 27)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+                    <div class="slide-content hidden h-full flex flex-col justify-center items-center main-slide">
+                        <img src="asset/28.jpg" onerror="handleImageError(this, 28)" class="max-w-full max-h-full object-contain rounded-lg shadow-md border border-slate-200">
+                    </div>
+
+                </div>
+                <div class="px-6 py-2.5 border-t border-slate-200 bg-white/60 flex justify-between items-center shrink-0">
+                    <button onclick="prevSlide('slider-6')" class="px-5 py-1.5 text-xs font-bold text-violet-700 bg-white rounded-full border border-violet-100 shadow-sm hover:bg-violet-50 transition focus:outline-none">Sebelumnya</button>
+                    <div class="flex space-x-1.5" id="dots-slider-6"></div>
+                    <button onclick="nextSlide('slider-6')" class="px-5 py-1.5 text-xs font-bold text-white bg-violet-500 rounded-full shadow-sm hover:bg-violet-600 transition focus:outline-none">Selanjutnya</button>
+                </div>
+            </div>
+        </div>
+        </main>
+
+    <footer class="h-8 shrink-0 border-t border-slate-200/60 bg-white/50 backdrop-blur-lg flex items-center justify-center relative z-20 w-full px-8">
+        <p class="text-[10px] font-bold text-slate-500 tracking-wide">MediaInteraktif.Edu &copy; 2026 | Dikembangkan oleh Roby</p>
+    </footer>
+
+    <div id="iframeModal" class="absolute inset-0 z-[60] hidden flex-col items-center justify-center p-6 bg-slate-900/85 backdrop-blur-sm opacity-0 transition-opacity">
+        <div class="bg-white w-full h-full max-w-5xl rounded-3xl shadow-2xl flex flex-col overflow-hidden scale-95 transition-transform" id="iframeModalContent">
+            <div class="flex justify-between items-center px-5 py-2.5 bg-slate-50 border-b shrink-0">
+                <h3 class="font-bold text-slate-800 text-sm">🌐 Penjelajah MPI</h3>
+                <div class="flex items-center gap-3">
+                    <a id="modalExternalLink" href="#" target="_blank" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold focus:outline-none">Tab Baru ↗</a>
+                    <button onclick="closeIframeModal()" class="text-slate-500 font-bold px-2 focus:outline-none">✖</button>
+                </div>
+            </div>
+            <div class="flex-grow relative">
+                <iframe id="modalIframe" src="" class="w-full h-full border-0 absolute z-10 bg-white"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen-gallery" class="hidden absolute inset-0 bg-slate-950/95 z-[70] flex-col items-center justify-center opacity-0 transition-opacity">
+        <div class="absolute top-4 right-4 z-50">
+            <button onclick="closeGalleryFullscreen()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 backdrop-blur focus:outline-none">Tutup ✖</button>
+        </div>
+        <div class="w-full h-full flex items-center justify-between px-2 relative">
+            <button onclick="prevSubSlide()" class="w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-lg focus:outline-none z-50">❮</button>
+            <div class="flex-grow h-full flex items-center justify-center p-4">
+                <img id="fs-image" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+            </div>
+            <button onclick="nextSubSlide()" class="w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-lg focus:outline-none z-50">❯</button>
+        </div>
+        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+            <span id="fs-counter" class="text-xs font-mono text-emerald-400 font-bold bg-emerald-900/50 px-4 py-1.5 rounded-full border border-emerald-500/30">1 / 14</span>
+        </div>
+    </div>
+
+    </div> <script>
+        // SCRIPT 1: ZOOM OTOMATIS (SKALA)
+        function autoScaleCanvas() {
+            const container = document.getElementById('lab-container');
+            const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+            container.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        }
+        window.addEventListener('resize', autoScaleCanvas);
+        window.addEventListener('DOMContentLoaded', autoScaleCanvas);
+
+        // SCRIPT 2: NAVIGASI HALAMAN UTAMA
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page-view').forEach(el => { el.classList.add('hidden'); el.classList.remove('page-enter'); });
+            const target = document.getElementById('page-' + pageId);
+            if(target) { target.classList.remove('hidden'); target.classList.add('page-enter'); }
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('nav-active'));
+            if(pageId !== 'home') {
+                const activeNav = document.getElementById('nav-' + pageId);
+                if(activeNav) activeNav.classList.add('nav-active');
+            }
+            
+            if(pageId.startsWith('modul')) {
+                const sliderId = 'slider-' + pageId.replace('modul', '');
+                if(sliderState[sliderId]) { sliderState[sliderId].current = 0; updateSlide(sliderId); }
+            }
+        }
+
+        // SCRIPT 3: KONTROL SLIDER INTERNAL
+        const sliderState = {
+            'slider-1': { current: 0, total: 4, color: 'bg-indigo-600' },
+            'slider-2': { current: 0, total: 4, color: 'bg-cyan-500' },
+            'slider-3': { current: 0, total: 7, color: 'bg-emerald-500' }, 
+            'slider-4': { current: 0, total: 7, color: 'bg-amber-500' }, 
+            'slider-5': { current: 0, total: 7, color: 'bg-rose-500' },
+            'slider-6': { current: 0, total: 14, color: 'bg-violet-500' } // Total disesuaikan jadi 14
+        };
+
+        function initSliders() {
+            for (const [id, data] of Object.entries(sliderState)) {
+                const container = document.getElementById(`dots-${id}`);
+                if(!container) continue;
+                container.innerHTML = Array.from({length: data.total}).map((_, i) => `<div id="dot-${id}-${i}" class="h-2 rounded-full transition-all duration-300 shadow-inner ${i===0 ? 'w-6 '+data.color : 'w-2 bg-slate-300 hover:bg-slate-400'} cursor-pointer" onclick="jumpSlide('${id}', ${i})"></div>`).join('');
+            }
+        }
+
+        function updateSlide(id) {
+            const container = document.getElementById(id);
+            if(!container) return;
+            const slides = container.querySelectorAll(':scope > .modul-slide-inner > .main-slide');
+            const st = sliderState[id];
+
+            slides.forEach((s, i) => {
+                if(i === st.current) {
+                    s.classList.remove('hidden'); s.classList.add('slide-enter');
+                    const dot = document.getElementById(`dot-${id}-${i}`); if(dot) dot.className = `h-2 rounded-full transition-all duration-300 shadow-inner w-6 ${st.color}`;
+                } else {
+                    s.classList.add('hidden'); s.classList.remove('slide-enter');
+                    const dot = document.getElementById(`dot-${id}-${i}`); if(dot) dot.className = 'h-2 rounded-full transition-all duration-300 shadow-inner w-2 bg-slate-300 hover:bg-slate-400 cursor-pointer';
+                }
+            });
+        }
+
+        function nextSlide(id) { sliderState[id].current = (sliderState[id].current + 1) % sliderState[id].total; updateSlide(id); }
+        function prevSlide(id) { sliderState[id].current = (sliderState[id].current - 1 + sliderState[id].total) % sliderState[id].total; updateSlide(id); }
+        function jumpSlide(id, index) { sliderState[id].current = index; updateSlide(id); }
+
+        // SCRIPT 4: GALERI GAMBAR MINI (14 GAMBAR)
+        let subCurrent = 0; const subTotal = 14; 
+        
+        function updateSubSlider() {
+            for(let i=0; i<subTotal; i++) {
+                const s = document.getElementById(`subslide-${i}`);
+                if(s) {
+                    s.style.opacity = i === subCurrent ? '1' : '0';
+                    s.style.pointerEvents = i === subCurrent ? 'auto' : 'none';
+                }
+            }
+            const c = document.getElementById('sub-counter');
+            if(c) c.innerText = `${subCurrent + 1} / ${subTotal}`;
+
+            const fsImg = document.getElementById('fs-image');
+            if(fsImg) fsImg.src = `asset/${subCurrent + 1}.jpg`;
+            const fsCount = document.getElementById('fs-counter');
+            if(fsCount) fsCount.innerText = `${subCurrent + 1} / ${subTotal}`;
+        }
+        
+        function nextSubSlide() { 
+            if(subCurrent < subTotal - 1) { subCurrent++; updateSubSlider(); } 
+            else { 
+                if(document.getElementById('fullscreen-gallery').classList.contains('flex')) closeGalleryFullscreen();
+                nextSlide('slider-3'); 
+            }
+        }
+        function prevSubSlide() { 
+            if(subCurrent > 0) { subCurrent--; updateSubSlider(); } 
+            else { 
+                if(document.getElementById('fullscreen-gallery').classList.contains('flex')) closeGalleryFullscreen();
+                prevSlide('slider-3'); 
+            }
+        }
+
+        // LAYAR PENUH GALERI
+        function openGalleryFullscreen() {
+            const fs = document.getElementById('fullscreen-gallery');
+            fs.classList.remove('hidden'); fs.classList.add('flex');
+            setTimeout(() => { fs.classList.remove('opacity-0'); }, 10);
+            updateSubSlider();
+        }
+        function closeGalleryFullscreen() {
+            const fs = document.getElementById('fullscreen-gallery');
+            fs.classList.add('opacity-0');
+            setTimeout(() => { fs.classList.add('hidden'); fs.classList.remove('flex'); }, 300);
+        }
+
+        document.addEventListener('keydown', function(event){
+            if(document.getElementById('fullscreen-gallery').classList.contains('flex')){
+                if(event.key === "Escape") closeGalleryFullscreen();
+                if(event.key === "ArrowRight") nextSubSlide();
+                if(event.key === "ArrowLeft") prevSubSlide();
+            }
+        });
+
+        // SCRIPT 5: MODAL IFRAME
+        function openIframeModal(url) {
+            document.getElementById('modalIframe').src = url;
+            document.getElementById('modalExternalLink').href = url;
+            const m = document.getElementById('iframeModal');
+            m.classList.remove('hidden'); 
+            setTimeout(() => { m.classList.add('opacity-100'); document.getElementById('iframeModalContent').classList.remove('scale-95'); }, 10);
+        }
+        function closeIframeModal() {
+            const m = document.getElementById('iframeModal');
+            m.classList.remove('opacity-100');
+            document.getElementById('iframeModalContent').classList.add('scale-95');
+            setTimeout(() => { m.classList.add('hidden'); document.getElementById('modalIframe').src = ''; }, 300);
+        }
+
+        // Init
+        window.onload = () => { 
+            initSliders(); 
+            updateSubSlider(); 
+        }
+    </script>
+</body>
+</html>
